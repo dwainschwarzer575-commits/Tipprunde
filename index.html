@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <title>WM 2026 Cloud-Tippspiel</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Firebase SDK -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
+        import { getDatabase, ref, onValue, set, update, remove } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js";
+
+        // --- // Import the functions you need from the SDKs you need
+import { initializeApp } from "firebase/app";
+import { getAnalytics } from "firebase/analytics";
+// TODO: Add SDKs for Firebase products that you want to use
+// https://firebase.google.com/docs/web/setup#available-libraries
+
+// Your web app's Firebase configuration
+// For Firebase JS SDK v7.20.0 and later, measurementId is optional
+const firebaseConfig = {
+  apiKey: "AIzaSyBbUFIgq3UxHd2I8vA97G0trQa7As-jCAk",
+  authDomain: "tipprunde-c4f24.firebaseapp.com",
+  projectId: "tipprunde-c4f24",
+  storageBucket: "tipprunde-c4f24.firebasestorage.app",
+  messagingSenderId: "811381665597",
+  appId: "1:811381665597:web:f6041a5ba443f9fb019f54",
+  measurementId: "G-6NSWJWCJKE"
+};
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+const analytics = getAnalytics(app); ---
+        const firebaseConfig = {
+            apiKey: "AIza...",
+            authDomain: "...",
+            databaseURL: "...",
+            projectId: "...",
+            storageBucket: "...",
+            messagingSenderId: "...",
+            appId: "..."
+        };
+        // -----------------------------------------
+
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+        
+        let games = [];
+        let allTips = {};
+
+        // Daten live abrufen
+        onValue(ref(db, 'games'), (snapshot) => {
+            games = snapshot.val() || [];
+            render();
+        });
+
+        onValue(ref(db, 'users'), (snapshot) => {
+            allTips = snapshot.val() || {};
+            render();
+        });
+
+        window.addGame = () => {
+            const phase = document.getElementById('newPhase').value;
+            const home = document.getElementById('newHome').value;
+            const away = document.getElementById('newAway').value;
+            const newId = Date.now();
+            update(ref(db, 'games/' + games.length), { id: newId, phase, home, away, resH: null, resA: null });
+        };
+
+        window.saveMyTips = () => {
+            const name = document.getElementById('userName').value.trim();
+            if (!name) return alert("Namen eingeben!");
+            const tips = Array.from(document.querySelectorAll('.tipH')).map(el => ({
+                id: el.dataset.id, h: el.value, a: document.querySelector(`.tipA[data-id="${el.dataset.id}"]`).value
+            }));
+            update(ref(db, 'users/' + name), { tips: tips });
+        };
+
+        window.updateResult = (index, type, val) => {
+            update(ref(db, 'games/' + index), { [type === 'h' ? 'resH' : 'resA']: val });
+        };
+
+        window.deletePlayer = (name) => {
+            remove(ref(db, 'users/' + name));
+        };
+
+        // Render-Logik (fast gleich wie vorher, nur jetzt mit den globalen Variablen)
+        function render() {
+            // ... (Hier den Render-Code aus der vorherigen Version einfügen, 
+            // wobei du überall 'games' und 'allTips' aus dem Firebase-Fetch nutzt)
+        }
+    </script>
+</head>
+<body>
+    <!-- Das UI bleibt identisch zu deiner bisherigen Version! -->
+    <!-- ... -->
+</body>
+</html>
