@@ -1,0 +1,13 @@
+{
+  "games": [
+    {"id":"1", "phase":"Achtelfinale", "home":"Brasilien", "away":"Norwegen", "resH":null, "resA":null},
+    {"id":"2", "phase":"Achtelfinale", "home":"Mexiko", "away":"England", "resH":null, "resA":null},
+    {"id":"3", "phase":"Achtelfinale", "home":"Portugal", "away":"Spanien", "resH":null, "resA":null},
+    {"id":"4", "phase":"Achtelfinale", "home":"USA", "away":"Belgien", "resH":null, "resA":null},
+    {"id":"5", "phase":"Achtelfinale", "home":"Argentinien", "away":"Ägypten", "resH":null, "resA":null},
+    {"id":"6", "phase":"Achtelfinale", "home":"Schweiz", "away":"Kolumbien", "resH":null, "resA":null},
+    {"id":"7", "phase":"Achtelfinale", "home":"Frankreich", "away":"Japan", "resH":null, "resA":null},
+    {"id":"8", "phase":"Achtelfinale", "home":"Niederlande", "away":"Italien", "resH":null, "resA":null}
+  ],
+  "usersData": {}
+}
