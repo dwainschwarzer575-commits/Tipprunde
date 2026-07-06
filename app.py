@@ -92,6 +92,20 @@ def get_all_tips_grouped():
     return grouped
 
 
+def get_all_users():
+    """Alle Spieler auslesen"""
+    conn = get_db()
+    rows = conn.execute("SELECT DISTINCT user FROM tips ORDER BY user ASC").fetchall()
+    return [r["user"] for r in rows]
+
+
+def delete_user_data(user):
+    """Alle Daten eines Spielers löschen"""
+    conn = get_db()
+    with conn:
+        conn.execute("DELETE FROM tips WHERE user = ?", (user,))
+
+
 def calculate_points_for_user(user):
     conn = get_db()
     rows = conn.execute("SELECT t.tip_h, t.tip_a, g.res_h, g.res_a FROM tips t JOIN games g ON t.game_id = g.id WHERE t.user = ?", (user,)).fetchall()
@@ -121,20 +135,32 @@ if "user" not in st.session_state:
 
 st.title("🏆 WM 2026 Tipp-Runde")
 
-# Sidebar: Benutzer mit besserer Sichtbarkeit
-st.sidebar.markdown("## 👤 Spieler")
-user = st.sidebar.text_input("Dein Name", value=st.session_state.user, placeholder="Name eingeben...")
-if user:
-    st.session_state.user = user
+# --- HAUPTBEREICH: Name-Eingabe (mobil-freundlich) ---
+col_name_input, col_name_spacer = st.columns([3, 1])
+with col_name_input:
+    user = st.text_input("👤 Dein Name", value=st.session_state.user, placeholder="Name eingeben...", label_visibility="collapsed")
+    if user:
+        st.session_state.user = user
 
-# Aktuellen Namen prominent oben anzeigen (gut für Mobile)
 if user:
-    st.info(f"📍 **Angemeldet als:** {user}")
+    col_status, col_delete = st.columns([3, 1])
+    with col_status:
+        st.success(f"✅ Angemeldet als: **{user}**")
+    with col_delete:
+        if st.button("🗑️ Profil löschen", use_container_width=True):
+            if st.session_state.get(f"confirm_delete_{user}", False):
+                delete_user_data(user)
+                st.session_state.user = ""
+                st.session_state[f"confirm_delete_{user}"] = False
+                st.success("Profil gelöscht!")
+                st.rerun()
+            else:
+                st.session_state[f"confirm_delete_{user}"] = True
+                st.warning("⚠️ Klick nochmal zum Bestätigen!")
 else:
     st.warning("⚠️ Bitte gib deinen Namen ein, um Tipps zu machen!")
 
-st.sidebar.markdown("---")
-st.sidebar.info("Gib deinen Namen ein, damit deine Tipps gespeichert werden.")
+st.markdown("---")
 
 # Add game
 st.subheader("➕ Neues Spiel hinzufügen")
@@ -166,7 +192,7 @@ if not games:
 else:
     for g in games:
         with st.container(border=True):
-            col1, col2, col3, col4, col5 = st.columns([2, 1.5, 1.5, 1.5, 1])
+            col1, col2, col3, col4, col5 = st.columns([2, 1.5, 1.2, 1.2, 1])
             
             # Spielinfo
             with col1:
@@ -189,41 +215,31 @@ else:
                 else:
                     st.warning("Bitte Namen eingeben!")
             
-            # Ergebnisse
+            # Ergebnisse (kompakt)
             with col3:
                 st.write("**Ergebnis:**")
-                col_h, col_a = st.columns(2)
+                col_h, col_a = st.columns(2, gap="small")
                 with col_h:
                     res_h = st.number_input(f"H", min_value=0, max_value=10, format="%d", 
                                           value=g['res_h'] if g['res_h'] is not None else 0, 
-                                          key=f"res_h_{g['id']}")
+                                          key=f"res_h_{g['id']}", label_visibility="collapsed")
                 with col_a:
                     res_a = st.number_input(f"A", min_value=0, max_value=10, format="%d", 
                                           value=g['res_a'] if g['res_a'] is not None else 0, 
-                                          key=f"res_a_{g['id']}")
+                                          key=f"res_a_{g['id']}", label_visibility="collapsed")
+            
+            # Speichern Button für Ergebnis
+            with col4:
                 if st.button("📝 Speichern", key=f"save_res_{g['id']}", use_container_width=True):
                     update_result(g['id'], res_h, res_a)
                     st.success("Ergebnis gespeichert!")
                     st.rerun()
-            
-            # Bearbeitungs-Button
-            with col4:
-                if st.button("✏️ Bearbeiten", key=f"edit_game_{g['id']}", use_container_width=True):
-                    st.session_state[f"edit_game_{g['id']}"] = True
             
             # Lösch-Button
             with col5:
                 if st.button("🗑️", key=f"del_game_{g['id']}"):
                     delete_game(g['id'])
                     st.success("Spiel gelöscht!")
-                    st.rerun()
-        
-        # Bearbeitungs-Sektion
-        if st.session_state.get(f"edit_game_{g['id']}", False):
-            with st.expander(f"🔧 Spiel {g['id']} bearbeiten", expanded=True):
-                st.warning("⚠️ Hinweis: Bearbeitung wird hier später erweitert.")
-                if st.button("❌ Bearbeitung schließen", key=f"close_edit_{g['id']}"):
-                    st.session_state[f"edit_game_{g['id']}"] = False
                     st.rerun()
 
 # Leaderboard
@@ -255,4 +271,4 @@ else:
             st.write(f"**{pts}**")
 
 st.markdown("---")
-st.info("💾 Hinweis: Die App speichert Daten in einer lokalen SQLite-Datei (tipprunde.db). Bei der Bereitstellung auf bestimmten Plattformen (z.B. Streamlit Cloud) können lokale Dateien zwischen Neustarts verloren gehen. Nutze dann einen externen Datenbankdienst.")
+st.info("💾 Hinweis: Die App speichert Daten in einer lokalen SQLite-Datei (tipprunde.db). Bei der Bereitstellung auf bestimmten Plattformen (z.B. Streamlit Cloud) können lokale Dateien zwischenzeitlich zurückgesetzt werden.")
