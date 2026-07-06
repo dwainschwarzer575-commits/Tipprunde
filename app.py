@@ -77,6 +77,11 @@ def get_games():
     return conn.execute("SELECT * FROM games ORDER BY created_at ASC").fetchall()
 
 
+def get_games_by_phase(phase):
+    conn = get_db()
+    return conn.execute("SELECT * FROM games WHERE phase = ? ORDER BY created_at ASC", (phase,)).fetchall()
+
+
 def get_user_tips(user):
     conn = get_db()
     rows = conn.execute("SELECT t.*, g.phase, g.home, g.away, g.res_h, g.res_a FROM tips t JOIN games g ON t.game_id = g.id WHERE t.user = ?", (user,)).fetchall()
@@ -106,6 +111,13 @@ def delete_user_data(user):
         conn.execute("DELETE FROM tips WHERE user = ?", (user,))
 
 
+def get_all_phases():
+    """Alle eindeutigen Phasen auslesen"""
+    conn = get_db()
+    rows = conn.execute("SELECT DISTINCT phase FROM games ORDER BY created_at ASC").fetchall()
+    return [r["phase"] for r in rows]
+
+
 def calculate_points_for_user(user):
     conn = get_db()
     rows = conn.execute("SELECT t.tip_h, t.tip_a, g.res_h, g.res_a FROM tips t JOIN games g ON t.game_id = g.id WHERE t.user = ?", (user,)).fetchall()
@@ -125,6 +137,25 @@ def calculate_points_for_user(user):
             pts += 1
     return pts
 
+
+def calculate_points_for_tip(tip_h, tip_a, res_h, res_a):
+    """Berechnet Punkte für einen einzelnen Tipp"""
+    if res_h is None or res_a is None:
+        return 0
+    try:
+        rh, ra, th, ta = int(res_h), int(res_a), int(tip_h), int(tip_a)
+    except (TypeError, ValueError):
+        return 0
+    
+    if rh == th and ra == ta:
+        return 3
+    elif (rh - ra) == 0 and (th - ta) == 0:
+        return 1
+    elif (rh - ra) * (th - ta) > 0:
+        return 1
+    return 0
+
+
 # --- Streamlit UI ---
 st.set_page_config(page_title="Tipprunde", layout="wide")
 init_db()
@@ -135,163 +166,231 @@ if "user" not in st.session_state:
 
 st.title("🏆 WM 2026 Tipp-Runde")
 
-# --- HAUPTBEREICH: Name-Eingabe (mobil-freundlich) ---
-col_name_input, col_name_spacer = st.columns([3, 1])
-with col_name_input:
-    user = st.text_input("👤 Dein Name", value=st.session_state.user, placeholder="Name eingeben...", label_visibility="collapsed")
-    if user:
-        st.session_state.user = user
+# Reiter erstellen
+tab1, tab2, tab3 = st.tabs(["🎮 Tipps", "🏅 Rangliste", "📊 Detailansicht"])
 
-if user:
-    col_status, col_delete = st.columns([3, 1])
-    with col_status:
-        st.success(f"✅ Angemeldet als: **{user}**")
-    with col_delete:
-        if st.button("🗑️ Profil löschen", use_container_width=True):
-            if st.session_state.get(f"confirm_delete_{user}", False):
-                delete_user_data(user)
-                st.session_state.user = ""
-                st.session_state[f"confirm_delete_{user}"] = False
-                st.success("Profil gelöscht!")
+# --- TAB 1: TIPPS ---
+with tab1:
+    # --- HAUPTBEREICH: Name-Eingabe (mobil-freundlich) ---
+    col_name_input, col_name_spacer = st.columns([3, 1])
+    with col_name_input:
+        user = st.text_input("👤 Dein Name", value=st.session_state.user, placeholder="Name eingeben...", label_visibility="collapsed")
+        if user:
+            st.session_state.user = user
+
+    if user:
+        col_status, col_delete = st.columns([3, 1])
+        with col_status:
+            st.success(f"✅ Angemeldet als: **{user}**")
+        with col_delete:
+            if st.button("🗑️ Profil löschen", use_container_width=True):
+                if st.session_state.get(f"confirm_delete_{user}", False):
+                    delete_user_data(user)
+                    st.session_state.user = ""
+                    st.session_state[f"confirm_delete_{user}"] = False
+                    st.success("Profil gelöscht!")
+                    st.rerun()
+                else:
+                    st.session_state[f"confirm_delete_{user}"] = True
+                    st.warning("⚠️ Klick nochmal zum Bestätigen!")
+    else:
+        st.warning("⚠️ Bitte gib deinen Namen ein, um Tipps zu machen!")
+
+    st.markdown("---")
+
+    # Add game
+    st.subheader("➕ Neues Spiel hinzufügen")
+    col1, col2, col3, col4 = st.columns(4)
+    with col1:
+        phase_in = st.text_input("Phase", placeholder="z.B. Gruppenphase", key="phase_in")
+    with col2:
+        home_in = st.text_input("Heim-Team", placeholder="z.B. Deutschland", key="home_in")
+    with col3:
+        away_in = st.text_input("Gast-Team", placeholder="z.B. Frankreich", key="away_in")
+    with col4:
+        st.write("")  # Spacing
+        st.write("")
+        if st.button("✅ Hinzufügen", use_container_width=True):
+            if phase_in and home_in and away_in:
+                add_game(phase_in, home_in, away_in)
+                st.success("Spiel hinzugefügt!")
                 st.rerun()
             else:
-                st.session_state[f"confirm_delete_{user}"] = True
-                st.warning("⚠️ Klick nochmal zum Bestätigen!")
-else:
-    st.warning("⚠️ Bitte gib deinen Namen ein, um Tipps zu machen!")
+                st.error("⚠️ Bitte alle Felder ausfüllen!")
 
-st.markdown("---")
+    st.markdown("---")
 
-# Add game
-st.subheader("➕ Neues Spiel hinzufügen")
-col1, col2, col3, col4 = st.columns(4)
-with col1:
-    phase_in = st.text_input("Phase", placeholder="z.B. Gruppenphase", key="phase_in")
-with col2:
-    home_in = st.text_input("Heim-Team", placeholder="z.B. Deutschland", key="home_in")
-with col3:
-    away_in = st.text_input("Gast-Team", placeholder="z.B. Frankreich", key="away_in")
-with col4:
-    st.write("")  # Spacing
-    st.write("")
-    if st.button("✅ Hinzufügen", use_container_width=True):
-        if phase_in and home_in and away_in:
-            add_game(phase_in, home_in, away_in)
-            st.success("Spiel hinzugefügt!")
-            st.rerun()
-        else:
-            st.error("⚠️ Bitte alle Felder ausfüllen!")
-
-st.markdown("---")
-
-# Main area: games + tip inputs
-st.subheader("🎮 Spiele & Tipps")
-games = get_games()
-if not games:
-    st.info("📭 Keine Spiele vorhanden. Füge oben ein Spiel hinzu!")
-else:
-    for g in games:
-        with st.container(border=True):
-            col1, col2, col3, col4, col5 = st.columns([2, 1.5, 1.2, 1.2, 1])
-            
-            # Spielinfo
-            with col1:
-                st.markdown(f"### {g['phase']}")
-                st.write(f"**{g['home']}** vs **{g['away']}**")
-            
-            # Tipps
-            with col2:
-                st.write("**Dein Tipp:**")
-                if user:
-                    col_h, col_a = st.columns(2)
+    # Main area: games + tip inputs
+    st.subheader("🎮 Spiele & Tipps")
+    games = get_games()
+    if not games:
+        st.info("📭 Keine Spiele vorhanden. Füge oben ein Spiel hinzu!")
+    else:
+        for g in games:
+            with st.container(border=True):
+                col1, col2, col3, col4, col5 = st.columns([2, 1.5, 1.2, 1.2, 1])
+                
+                # Spielinfo
+                with col1:
+                    st.markdown(f"### {g['phase']}")
+                    st.write(f"**{g['home']}** vs **{g['away']}**")
+                
+                # Tipps
+                with col2:
+                    st.write("**Dein Tipp:**")
+                    if user:
+                        col_h, col_a = st.columns(2)
+                        with col_h:
+                            tip_h = st.number_input(f"H", min_value=0, max_value=10, format="%d", key=f"tip_h_{g['id']}")
+                        with col_a:
+                            tip_a = st.number_input(f"A", min_value=0, max_value=10, format="%d", key=f"tip_a_{g['id']}")
+                        if st.button("💾 Speichern", key=f"save_tip_{g['id']}", use_container_width=True):
+                            save_tip(user, g['id'], tip_h, tip_a)
+                            st.success("Tipp gespeichert!")
+                            st.rerun()
+                    else:
+                        st.warning("Bitte Namen eingeben!")
+                
+                # Ergebnisse (kompakt)
+                with col3:
+                    st.write("**Ergebnis:**")
+                    col_h, col_a = st.columns(2, gap="small")
                     with col_h:
-                        tip_h = st.number_input(f"H", min_value=0, max_value=10, format="%d", key=f"tip_h_{g['id']}")
+                        res_h = st.number_input(f"H", min_value=0, max_value=10, format="%d", 
+                                              value=g['res_h'] if g['res_h'] is not None else 0, 
+                                              key=f"res_h_{g['id']}", label_visibility="collapsed")
                     with col_a:
-                        tip_a = st.number_input(f"A", min_value=0, max_value=10, format="%d", key=f"tip_a_{g['id']}")
-                    if st.button("💾 Speichern", key=f"save_tip_{g['id']}", use_container_width=True):
-                        save_tip(user, g['id'], tip_h, tip_a)
-                        st.success("Tipp gespeichert!")
+                        res_a = st.number_input(f"A", min_value=0, max_value=10, format="%d", 
+                                              value=g['res_a'] if g['res_a'] is not None else 0, 
+                                              key=f"res_a_{g['id']}", label_visibility="collapsed")
+                
+                # Speichern Button für Ergebnis
+                with col4:
+                    if st.button("📝 Speichern", key=f"save_res_{g['id']}", use_container_width=True):
+                        update_result(g['id'], res_h, res_a)
+                        st.success("Ergebnis gespeichert!")
                         st.rerun()
-                else:
-                    st.warning("Bitte Namen eingeben!")
-            
-            # Ergebnisse (kompakt)
-            with col3:
-                st.write("**Ergebnis:**")
-                col_h, col_a = st.columns(2, gap="small")
-                with col_h:
-                    res_h = st.number_input(f"H", min_value=0, max_value=10, format="%d", 
-                                          value=g['res_h'] if g['res_h'] is not None else 0, 
-                                          key=f"res_h_{g['id']}", label_visibility="collapsed")
-                with col_a:
-                    res_a = st.number_input(f"A", min_value=0, max_value=10, format="%d", 
-                                          value=g['res_a'] if g['res_a'] is not None else 0, 
-                                          key=f"res_a_{g['id']}", label_visibility="collapsed")
-            
-            # Speichern Button für Ergebnis
-            with col4:
-                if st.button("📝 Speichern", key=f"save_res_{g['id']}", use_container_width=True):
-                    update_result(g['id'], res_h, res_a)
-                    st.success("Ergebnis gespeichert!")
-                    st.rerun()
-            
-            # Lösch-Button
-            with col5:
-                if st.button("🗑️", key=f"del_game_{g['id']}"):
-                    delete_game(g['id'])
-                    st.success("Spiel gelöscht!")
-                    st.rerun()
+                
+                # Lösch-Button
+                with col5:
+                    if st.button("🗑️", key=f"del_game_{g['id']}"):
+                        delete_game(g['id'])
+                        st.success("Spiel gelöscht!")
+                        st.rerun()
 
-# Leaderboard
-st.markdown("---")
-st.subheader("🏅 Rangliste")
-tips_grouped = get_all_tips_grouped()
-scores = []
-for name in tips_grouped.keys():
-    pts = calculate_points_for_user(name)
-    scores.append((name, pts))
-scores.sort(key=lambda x: -x[1])
-
-if not scores:
-    st.info("Noch keine Tipps abgegeben.")
-else:
-    # Tabelle
-    col1, col2 = st.columns([3, 1])
+    # Legende für Punktewertung
+    st.markdown("---")
+    st.subheader("📋 Punktewertung")
+    col1, col2, col3 = st.columns(3)
     with col1:
-        st.write("**Spieler**")
+        st.markdown("""
+        **✅ 3 Punkte**
+        - Exaktes Ergebnis
+        - Beispiel: Du tippst 2:1 und das Ergebnis ist 2:1
+        """)
     with col2:
-        st.write("**Punkte**")
-    
-    for idx, (name, pts) in enumerate(scores, start=1):
+        st.markdown("""
+        **🟡 1 Punkt**
+        - Unentschieden
+        - Beispiel: Du tippst 1:1 und das Ergebnis ist 2:2
+        """)
+    with col3:
+        st.markdown("""
+        **🟡 1 Punkt**
+        - Richtige Gewinnermannschaft
+        - Beispiel: Du tippst 2:1 und das Ergebnis ist 3:1 (beide Heimsieg)
+        """)
+
+# --- TAB 2: RANGLISTE ---
+with tab2:
+    st.subheader("🏅 Rangliste")
+    tips_grouped = get_all_tips_grouped()
+    scores = []
+    for name in tips_grouped.keys():
+        pts = calculate_points_for_user(name)
+        scores.append((name, pts))
+    scores.sort(key=lambda x: -x[1])
+
+    if not scores:
+        st.info("Noch keine Tipps abgegeben.")
+    else:
+        # Tabelle
         col1, col2 = st.columns([3, 1])
         with col1:
-            medal = "🥇" if idx == 1 else "🥈" if idx == 2 else "🥉" if idx == 3 else f"{idx}."
-            st.write(f"{medal} {name}")
+            st.write("**Spieler**")
         with col2:
-            st.write(f"**{pts}**")
+            st.write("**Punkte**")
+        
+        for idx, (name, pts) in enumerate(scores, start=1):
+            col1, col2 = st.columns([3, 1])
+            with col1:
+                medal = "🥇" if idx == 1 else "🥈" if idx == 2 else "🥉" if idx == 3 else f"{idx}."
+                st.write(f"{medal} {name}")
+            with col2:
+                st.write(f"**{pts}**")
 
-# Legende für Punktewertung
-st.markdown("---")
-st.subheader("📋 Punktewertung")
-col1, col2, col3 = st.columns(3)
-with col1:
-    st.markdown("""
-    **✅ 3 Punkte**
-    - Exaktes Ergebnis
-    - Beispiel: Du tippst 2:1 und das Ergebnis ist 2:1
-    """)
-with col2:
-    st.markdown("""
-    **🟡 1 Punkt**
-    - Unentschieden
-    - Beispiel: Du tippst 1:1 und das Ergebnis ist 2:2
-    """)
-with col3:
-    st.markdown("""
-    **🟡 1 Punkt**
-    - Richtige Gewinnermannschaft
-    - Beispiel: Du tippst 2:1 und das Ergebnis ist 3:1 (beide Heimsieg)
-    """)
+# --- TAB 3: DETAILANSICHT ---
+with tab3:
+    st.subheader("📊 Detailansicht - Tipps nach Phase")
+    
+    phases = get_all_phases()
+    if not phases:
+        st.info("📭 Keine Spiele vorhanden.")
+    else:
+        selected_phase = st.selectbox("Wähle eine Phase:", phases, key="phase_select")
+        
+        games_in_phase = get_games_by_phase(selected_phase)
+        
+        if not games_in_phase:
+            st.info(f"Keine Spiele in der Phase '{selected_phase}' vorhanden.")
+        else:
+            st.write(f"### Spiele in: **{selected_phase}**")
+            
+            for g in games_in_phase:
+                with st.container(border=True):
+                    st.markdown(f"**{g['home']}** vs **{g['away']}**")
+                    
+                    # Ergebnis anzeigen
+                    if g['res_h'] is not None and g['res_a'] is not None:
+                        st.write(f"📊 **Endergebnis: {g['res_h']}:{g['res_a']}**")
+                    else:
+                        st.write("📊 **Endergebnis: Noch nicht eingetragen**")
+                    
+                    # Alle Tipps für dieses Spiel anzeigen
+                    conn = get_db()
+                    tips = conn.execute(
+                        "SELECT user, tip_h, tip_a FROM tips WHERE game_id = ? ORDER BY user ASC",
+                        (g['id'],)
+                    ).fetchall()
+                    
+                    if tips:
+                        st.write("**Tipps der Spieler:**")
+                        
+                        # Tabelle für Tipps
+                        cols = st.columns([2, 1, 1])
+                        with cols[0]:
+                            st.write("**Spieler**")
+                        with cols[1]:
+                            st.write("**Tipp**")
+                        with cols[2]:
+                            st.write("**Punkte**")
+                        
+                        for tip in tips:
+                            pts = calculate_points_for_tip(tip["tip_h"], tip["tip_a"], g['res_h'], g['res_a'])
+                            cols = st.columns([2, 1, 1])
+                            with cols[0]:
+                                st.write(tip["user"])
+                            with cols[1]:
+                                st.write(f"{tip['tip_h']}:{tip['tip_a']}")
+                            with cols[2]:
+                                if pts == 3:
+                                    st.write("✅ 3")
+                                elif pts == 1:
+                                    st.write("🟡 1")
+                                else:
+                                    st.write("❌ 0")
+                    else:
+                        st.info("Noch keine Tipps für dieses Spiel.")
 
 st.markdown("---")
 st.info("💾 Hinweis: Die App speichert Daten in einer lokalen SQLite-Datei (tipprunde.db). Bei der Bereitstellung auf bestimmten Plattformen (z.B. Streamlit Cloud) können lokale Dateien zwischenzeitlich zurückgesetzt werden.")
