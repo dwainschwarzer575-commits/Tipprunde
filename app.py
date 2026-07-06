@@ -38,6 +38,13 @@ def init_db():
             winner TEXT NOT NULL,
             updated_at TEXT NOT NULL
         )""")
+        # Tabelle für WM-Ergebnis
+        conn.execute("""
+        CREATE TABLE IF NOT EXISTS world_cup_result (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            winner TEXT NOT NULL,
+            updated_at TEXT NOT NULL
+        )""")
         conn.commit()
 
 
@@ -93,10 +100,28 @@ def save_world_cup_tip(user, winner):
                          (user, winner, now))
 
 
+def set_world_cup_result(winner):
+    """Speichert das echte WM-Ergebnis"""
+    conn = get_db()
+    with conn:
+        now = datetime.utcnow().isoformat()
+        # Lösche vorheriges Ergebnis
+        conn.execute("DELETE FROM world_cup_result")
+        conn.execute("INSERT INTO world_cup_result (winner, updated_at) VALUES (?, ?)",
+                     (winner, now))
+
+
 def get_world_cup_tip(user):
     """Holt den Weltmeistertipp eines Spielers"""
     conn = get_db()
     row = conn.execute("SELECT winner FROM world_cup_tips WHERE user = ?", (user,)).fetchone()
+    return row["winner"] if row else None
+
+
+def get_world_cup_result():
+    """Holt das echte WM-Ergebnis"""
+    conn = get_db()
+    row = conn.execute("SELECT winner FROM world_cup_result LIMIT 1").fetchone()
     return row["winner"] if row else None
 
 
@@ -165,7 +190,7 @@ def calculate_points_for_user(user, world_cup_winner=None):
         elif (rh - ra) * (th - ta) > 0:
             pts += 1
     
-    # Weltmeistertipp-Bonus
+    # Weltmeistertipp-Bonus: Nur wenn Ergebnis eingetragen ist
     if world_cup_winner and get_world_cup_tip(user) == world_cup_winner:
         pts += 20
     
@@ -197,11 +222,13 @@ init_db()
 # Session State initialisieren
 if "user" not in st.session_state:
     st.session_state.user = ""
+if "user_loaded" not in st.session_state:
+    st.session_state.user_loaded = False
 
 st.title("🏆 WM 2026 Tipp-Runde")
 
 # Reiter erstellen
-tab1, tab2, tab3, tab4 = st.tabs(["🎮 Tipps", "🏅 Rangliste", "📊 Detailansicht", "🌍 Weltmeistertipp"])
+tab1, tab2, tab3, tab4, tab5 = st.tabs(["🎮 Tipps", "🏅 Rangliste", "📊 Detailansicht", "🌍 Weltmeistertipp", "⚙️ Admin"])
 
 # --- TAB 1: TIPPS ---
 with tab1:
@@ -211,6 +238,7 @@ with tab1:
         user = st.text_input("👤 Dein Name", value=st.session_state.user, placeholder="Name eingeben...", label_visibility="collapsed")
         if user:
             st.session_state.user = user
+            st.session_state.user_loaded = True
 
     if user:
         col_status, col_delete = st.columns([3, 1])
@@ -221,6 +249,7 @@ with tab1:
                 if st.session_state.get(f"confirm_delete_{user}", False):
                     delete_user_data(user)
                     st.session_state.user = ""
+                    st.session_state.user_loaded = False
                     st.session_state[f"confirm_delete_{user}"] = False
                     st.success("Profil gelöscht!")
                     st.rerun()
@@ -353,11 +382,7 @@ with tab2:
     tips_grouped = get_all_tips_grouped()
     
     # Weltmeistertipp auslesen
-    world_cup_winner = None
-    conn = get_db()
-    winner_row = conn.execute("SELECT winner FROM world_cup_tips LIMIT 1").fetchone()
-    if winner_row:
-        world_cup_winner = winner_row["winner"]
+    world_cup_winner = get_world_cup_result()
     
     scores = []
     for name in tips_grouped.keys():
@@ -501,6 +526,50 @@ with tab4:
     else:
         st.warning("⚠️ Bitte gib deinen Namen in Tab 1 ein, um einen Weltmeistertipp abzugeben!")
 
+# --- TAB 5: ADMIN ---
+with tab5:
+    st.subheader("⚙️ Admin-Bereich")
+    st.write("Hier können Administratoren das echte WM-Ergebnis eintragen, um Punkte zu vergeben.")
+    
+    admin_password = st.text_input("Admin-Passwort", type="password", key="admin_pw")
+    
+    if admin_password == "admin123":  # Passwort kannst du später ändern
+        st.success("✅ Admin-Modus aktiviert")
+        
+        st.markdown("---")
+        st.subheader("🌍 WM 2026 Endergebnis")
+        st.write("Trage hier den Weltmeister ein, um die Weltmeistertipp-Punkte zu vergeben.")
+        
+        world_cup_teams = [
+            "🇦🇷 Argentinien", "🇦🇺 Australien", "🇦🇹 Österreich", "🇧🇪 Belgien", 
+            "🇧🇷 Brasilien", "🇧🇬 Bulgarien", "🇨🇦 Kanada", "🇭🇷 Kroatien",
+            "🇨🇿 Tschechien", "🇩🇰 Dänemark", "🇪🇬 Ägypten", "🇫🇮 Finnland",
+            "🇫🇷 Frankreich", "🇩🇪 Deutschland", "🇬🇷 Griechenland", "🇭🇺 Ungarn",
+            "🇮🇸 Island", "🇮🇹 Italien", "🇮🇷 Iran", "🇯🇵 Japan", "🇲🇽 Mexiko",
+            "🇳🇱 Niederlande", "🇳🇿 Neuseeland", "🇳🇬 Nigeria", "🇳🇴 Norwegen",
+            "🇵🇱 Polen", "🇵🇹 Portugal", "🇷🇴 Rumänien", "🇷🇺 Russland", "🇪🇸 Spanien",
+            "🇸🇪 Schweden", "🇨🇭 Schweiz", "🇹🇷 Türkei", "🇺🇦 Ukraine", "🇬🇧 England",
+            "🇺🇸 USA", "🇺🇾 Uruguay"
+        ]
+        
+        current_result = get_world_cup_result()
+        index_result = world_cup_teams.index(current_result) if current_result in world_cup_teams else 0
+        
+        selected_result = st.selectbox(
+            "Weltmeister 2026:",
+            world_cup_teams,
+            index=index_result,
+            key="admin_wm_result"
+        )
+        
+        if st.button("✅ WM-Ergebnis speichern", use_container_width=True):
+            set_world_cup_result(selected_result)
+            st.success(f"✅ Weltmeister 2026 ist: **{selected_result}**")
+            st.info("🏆 Spieler mit korrektem Tipp erhalten automatisch 20 Zusatzpunkte!")
+            st.balloons()
+    else:
+        if admin_password:
+            st.error("❌ Falsches Passwort!")
+
 st.markdown("---")
 st.info("💾 Hinweis: Die App speichert Daten in einer lokalen SQLite-Datei (tipprunde.db).")
-st.info("💾 Hinweis: Die App speichert Daten in einer lokalen SQLite-Datei (tipprunde.db). Bei der Bereitstellung auf bestimmten Plattformen (z.B. Streamlit Cloud) können lokale Dateien zwischenzeitlich zurückgesetzt werden.")
