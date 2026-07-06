@@ -121,6 +121,8 @@ def calculate_points_for_user(user):
             pts += 3
         elif (rh - ra) == 0 and (th - ta) == 0:
             pts += 1
+        elif (rh - ra) * (th - ta) > 0:
+            pts += 1
     return pts
 
 # --- Streamlit UI ---
@@ -271,7 +273,7 @@ else:
 # Legende für Punktewertung
 st.markdown("---")
 st.subheader("📋 Punktewertung")
-col1, col2 = st.columns(2)
+col1, col2, col3 = st.columns(3)
 with col1:
     st.markdown("""
     **✅ 3 Punkte**
@@ -281,8 +283,14 @@ with col1:
 with col2:
     st.markdown("""
     **🟡 1 Punkt**
-    - Gleiche Tendenz (Unentschieden)
+    - Unentschieden
     - Beispiel: Du tippst 1:1 und das Ergebnis ist 2:2
+    """)
+with col3:
+    st.markdown("""
+    **🟡 1 Punkt**
+    - Richtige Gewinnermannschaft
+    - Beispiel: Du tippst 2:1 und das Ergebnis ist 3:1 (beide Heimsieg)
     """)
 
 st.markdown("---")
