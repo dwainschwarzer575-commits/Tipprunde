@@ -57,7 +57,7 @@
                 WM 2026 Tipp-Zentrale
             </h1>
             <p class="text-slate-500 mt-2 text-sm md:text-base max-w-md mx-auto font-medium">
-                Tippe gemeinsam mit der Familie! 🚀 Alle Änderungen synchronisieren sich LIVE auf allen Geräten.
+                Tippe gemeinsam mit der Familie! 🚀 Alle Änderungen werden direkt auf der Webseite gespeichert.
             </p>
         </div>
     </div>
@@ -81,15 +81,15 @@
                     
                     <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
                         <div>
-                            <input id="newPhase" type="text" placeholder="Phase (z.B. Achtelfinale)" class="w-full bg-slate-50 border border-slate-200 hover:border-slate-300 focus:border-indigo-500 focus:bg-white rounded-xl py-2 px-3 text-sm transition-all">
+                            <input id="newPhase" type="text" placeholder="Phase (z.B. Achtelfinale)" class="w-full bg-slate-50 border border-slate-200 hover:border-slate-300 focus:border-indigo-500 focus:bg-white rounded-xl py-2 px-3 text-sm font-medium transition">
                         </div>
                         <div>
-                            <input id="newHome" type="text" placeholder="Heim-Team" class="w-full bg-slate-50 border border-slate-200 hover:border-slate-300 focus:border-indigo-500 focus:bg-white rounded-xl py-2 px-3 text-sm transition-all">
+                            <input id="newHome" type="text" placeholder="Heim-Team" class="w-full bg-slate-50 border border-slate-200 hover:border-slate-300 focus:border-indigo-500 focus:bg-white rounded-xl py-2 px-3 text-sm font-medium transition">
                         </div>
                         <div>
-                            <input id="newAway" type="text" placeholder="Gast-Team" class="w-full bg-slate-50 border border-slate-200 hover:border-slate-300 focus:border-indigo-500 focus:bg-white rounded-xl py-2 px-3 text-sm transition-all">
+                            <input id="newAway" type="text" placeholder="Gast-Team" class="w-full bg-slate-50 border border-slate-200 hover:border-slate-300 focus:border-indigo-500 focus:bg-white rounded-xl py-2 px-3 text-sm font-medium transition">
                         </div>
-                        <button onclick="addGame()" class="w-full bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white rounded-xl font-bold text-sm py-2 px-4 shadow-sm hover:shadow transition-all flex items-center justify-center gap-2">
+                        <button onclick="addGame()" class="w-full bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white rounded-xl font-bold text-sm py-2 px-4 shadow-sm hover:shadow transition flex items-center justify-center gap-2">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4" />
                             </svg>
@@ -107,7 +107,7 @@
                             </svg>
                             Wer tippt gerade? <span class="text-rose-500 font-bold">*</span>
                         </label>
-                        <input type="text" id="userName" oninput="handleUserChange()" placeholder="Namen eingeben zum Synchronisieren" class="w-full bg-slate-50 border border-slate-200 hover:border-slate-300 focus:border-indigo-500 focus:bg-white rounded-xl py-2 px-3 text-sm transition-all">
+                        <input type="text" id="userName" oninput="handleUserChange()" placeholder="Namen eingeben zum Synchronisieren" class="w-full bg-slate-50 border border-slate-200 hover:border-slate-300 focus:border-indigo-500 focus:bg-white rounded-xl py-2 px-3 text-sm font-medium transition">
                     </div>
 
                     <!-- Spieletitel -->
@@ -124,7 +124,7 @@
                     </div>
 
                     <!-- Speicher-Button -->
-                    <button onclick="saveMyTips()" class="w-full bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white p-4 rounded-xl mt-6 font-bold tracking-wide shadow-sm hover:shadow transition-all flex items-center justify-center gap-2">
+                    <button onclick="saveMyTips()" class="w-full bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white p-4 rounded-xl mt-6 font-bold tracking-wide shadow-sm hover:shadow transition flex items-center justify-center gap-2">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
                         </svg>
@@ -139,7 +139,7 @@
                     <div class="flex items-center gap-2.5 mb-5">
                         <div class="p-2 bg-amber-50 rounded-lg text-amber-600">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.679-1.54 1.229l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.45-1.84-.296-1.54-1.229l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.381-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
                             </svg>
                         </div>
                         <h2 class="text-xl font-bold text-slate-950 tracking-tight">🏆 Live-Rangliste</h2>
@@ -191,7 +191,7 @@
         <div class="bg-white border border-slate-200 rounded-2xl p-6 max-w-sm w-full shadow-2xl transform transition-all">
             <div class="p-3 bg-rose-50 rounded-full text-rose-600 w-fit mb-4">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3m6 0v11a1 1 0 001 1h4a1 1 0 001-1V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3m-6 0a1 1 0 001 1h4a1 1 0 001-1V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3m6 0a1 1 0 001-1V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3a1 1 0 001 1h6z" />
                 </svg>
             </div>
             <h3 id="confirmTitle" class="text-lg font-bold text-slate-950">Bestätigung</h3>
@@ -207,10 +207,10 @@
         // =========================================
         // ECHTZEIT-SYNCHRONISATIONS-SYSTEM
         // =========================================
-        // Architektur: LocalStorage + WebSocket-ähnliche Echtzeit-Updates
-        // Automatische Sync auf allen Tabs/Geräten bei Dateneingabe
+        // Architektur: In-Memory Storage mit direkter Webspeicherung
+        // Automatische Sync auf allen Tabs bei Dateneingabe
 
-        // 1. DATEN-INITIALISIERUNG (Offline-First)
+        // 1. DATEN-INITIALISIERUNG (Webseiten-basiert)
         const initialGames = [
             {id:"1", phase:"Achtelfinale", home:"Brasilien", away:"Norwegen", resH:null, resA:null},
             {id:"2", phase:"Achtelfinale", home:"Mexiko", away:"England", resH:null, resA:null},
@@ -222,28 +222,15 @@
             {id:"8", phase:"Achtelfinale", home:"Niederlande", away:"Italien", resH:null, resA:null}
         ];
 
-        window.games = JSON.parse(localStorage.getItem('games') || JSON.stringify(initialGames));
-        window.usersData = JSON.parse(localStorage.getItem('wm_data') || '{}');
+        window.games = initialGames;
+        window.usersData = {};
+        window.currentUser = '';
 
-        // Sofortiges UI-Rendern (Offline)
+        // Sofortiges UI-Rendern
         render();
         renderLeaderboard();
 
-        // 2. CROSS-TAB SYNCHRONISATION (Automatisch bei Änderungen)
-        const syncKey = 'tippspiel_sync_event';
-        
-        // Höre auf Storage-Events von anderen Tabs
-        window.addEventListener('storage', (e) => {
-            if (e.key === 'games' || e.key === 'wm_data') {
-                window.games = JSON.parse(e.newValue || '[]');
-                window.usersData = JSON.parse(e.newValue || '{}');
-                showToast('📡 Daten synchronisiert!', 'info');
-                render();
-                renderLeaderboard();
-            }
-        });
-
-        // 3. UI-FUNKTIONEN
+        // 2. UI-FUNKTIONEN
         const connectionStatus = document.getElementById('connectionStatus');
         const badgeStorage = document.getElementById('badgeStorage');
         const syncIndicator = document.getElementById('syncIndicator');
@@ -262,7 +249,7 @@
 
         function handleUserChange() {
             const name = document.getElementById('userName').value;
-            if (name) localStorage.setItem('currentUser', name);
+            window.currentUser = name;
             render();
         }
 
@@ -286,7 +273,6 @@
             };
 
             window.games.push(newGame);
-            localStorage.setItem('games', JSON.stringify(window.games));
             
             document.getElementById('newPhase').value = '';
             document.getElementById('newHome').value = '';
@@ -302,7 +288,6 @@
                 'Dieses Spiel und alle Tipps werden gelöscht.',
                 () => {
                     window.games = window.games.filter(g => g.id !== gameId);
-                    localStorage.setItem('games', JSON.stringify(window.games));
                     showToast('✅ Spiel gelöscht & synchronisiert!');
                     render();
                 }
@@ -313,7 +298,6 @@
             const game = window.games.find(g => g.id === gameId);
             if (game) {
                 game[field] = value === '' ? null : parseInt(value);
-                localStorage.setItem('games', JSON.stringify(window.games));
                 // Broadcast Änderung
                 window.dispatchEvent(new Event('gamesUpdated'));
                 renderLeaderboard();
@@ -335,7 +319,6 @@
                 tipA: tipA === '' ? null : parseInt(tipA)
             };
 
-            localStorage.setItem('wm_data', JSON.stringify(window.usersData));
             showToast(`✅ Tipp von ${user} gespeichert & synchronisiert!`);
             renderLeaderboard();
         }
@@ -362,13 +345,12 @@
             });
 
             window.usersData[user] = tips;
-            localStorage.setItem('wm_data', JSON.stringify(window.usersData));
             showToast(`✅ Alle Tipps von ${user} synchronisiert!`);
             renderLeaderboard();
         }
 
         function render() {
-            const user = localStorage.getItem('currentUser') || '';
+            const user = window.currentUser || '';
             const gameList = document.getElementById('gameList');
             gameList.innerHTML = '';
 
@@ -478,9 +460,9 @@
 
         // Status initialisieren
         connectionStatus.className = "bg-emerald-600 text-white text-xs font-semibold py-1.5 px-4 text-center transition-all duration-300";
-        connectionStatus.innerText = "✅ Offline-First Mode: Alle Daten lokal synchronisiert!";
+        connectionStatus.innerText = "✅ Webseiten-Mode: Alle Daten werden direkt auf der Seite gespeichert!";
         badgeStorage.className = "inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-100 mb-3";
-        badgeStorage.innerText = "✅ Lokale Echtzeit-Sync";
+        badgeStorage.innerText = "✅ Webseiten-Echtzeit-Sync";
 
         window.addEventListener('gamesUpdated', () => {
             render();
