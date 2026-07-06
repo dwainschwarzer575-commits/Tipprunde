@@ -141,6 +141,13 @@ def get_user_tips(user):
     return rows
 
 
+def get_user_tip_for_game(user, game_id):
+    """Holt den Tipp eines Spielers für ein spezifisches Spiel"""
+    conn = get_db()
+    row = conn.execute("SELECT tip_h, tip_a FROM tips WHERE user = ? AND game_id = ?", (user, game_id)).fetchone()
+    return row if row else None
+
+
 def get_all_tips_grouped():
     conn = get_db()
     rows = conn.execute("SELECT t.user, t.game_id, t.tip_h, t.tip_a, g.res_h, g.res_a FROM tips t JOIN games g ON t.game_id = g.id").fetchall()
@@ -457,6 +464,26 @@ with tab3:
                             st.success("Ergebnis gespeichert!")
                             st.rerun()
                     
+                    # Dein eigener Tipp (wenn eingeloggt)
+                    if st.session_state.user:
+                        my_tip = get_user_tip_for_game(st.session_state.user, g['id'])
+                        if my_tip:
+                            my_points = calculate_points_for_tip(my_tip["tip_h"], my_tip["tip_a"], g['res_h'], g['res_a'])
+                            # Farbcodierung basierend auf Punkten
+                            if g['res_h'] is not None and g['res_a'] is not None:
+                                if my_points == 3:
+                                    st.success(f"✅ **Dein Tipp: {my_tip['tip_h']}:{my_tip['tip_a']} → 3 Punkte!**")
+                                elif my_points == 1:
+                                    st.info(f"🟡 **Dein Tipp: {my_tip['tip_h']}:{my_tip['tip_a']} → 1 Punkt**")
+                                else:
+                                    st.warning(f"❌ **Dein Tipp: {my_tip['tip_h']}:{my_tip['tip_a']} → 0 Punkte**")
+                            else:
+                                st.info(f"💬 **Dein Tipp: {my_tip['tip_h']}:{my_tip['tip_a']}**")
+                        else:
+                            st.warning("⚠️ Du hast noch keinen Tipp für dieses Spiel abgegeben.")
+                    
+                    st.markdown("---")
+                    
                     # Alle Tipps für dieses Spiel anzeigen
                     conn = get_db()
                     tips = conn.execute(
@@ -480,7 +507,11 @@ with tab3:
                             pts = calculate_points_for_tip(tip["tip_h"], tip["tip_a"], g['res_h'], g['res_a'])
                             cols = st.columns([2, 1, 1])
                             with cols[0]:
-                                st.write(tip["user"])
+                                # Markiere deinen Namen
+                                if tip["user"] == st.session_state.user:
+                                    st.write(f"**{tip['user']} (du)** 👈")
+                                else:
+                                    st.write(tip["user"])
                             with cols[1]:
                                 st.write(f"{tip['tip_h']}:{tip['tip_a']}")
                             with cols[2]:
