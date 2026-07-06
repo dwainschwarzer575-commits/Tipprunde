@@ -121,8 +121,6 @@ def calculate_points_for_user(user):
             pts += 3
         elif (rh - ra) == 0 and (th - ta) == 0:
             pts += 1
-        elif (rh - ra) * (th - ta) > 0:
-            pts += 1
     return pts
 
 # --- Streamlit UI ---
@@ -269,6 +267,23 @@ else:
             st.write(f"{medal} {name}")
         with col2:
             st.write(f"**{pts}**")
+
+# Legende für Punktewertung
+st.markdown("---")
+st.subheader("📋 Punktewertung")
+col1, col2 = st.columns(2)
+with col1:
+    st.markdown("""
+    **✅ 3 Punkte**
+    - Exaktes Ergebnis
+    - Beispiel: Du tippst 2:1 und das Ergebnis ist 2:1
+    """)
+with col2:
+    st.markdown("""
+    **🟡 1 Punkt**
+    - Gleiche Tendenz (Unentschieden)
+    - Beispiel: Du tippst 1:1 und das Ergebnis ist 2:2
+    """)
 
 st.markdown("---")
 st.info("💾 Hinweis: Die App speichert Daten in einer lokalen SQLite-Datei (tipprunde.db). Bei der Bereitstellung auf bestimmten Plattformen (z.B. Streamlit Cloud) können lokale Dateien zwischenzeitlich zurückgesetzt werden.")
